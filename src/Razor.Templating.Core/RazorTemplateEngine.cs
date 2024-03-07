@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace Razor.Templating.Core
     {
         private static Lazy<IRazorTemplateEngine> _instance = new(CreateInstance, true);
         private static IServiceCollection? _services;
+        private static Action<RazorViewEngineOptions>? _setupAction;
 
         /// <summary>
         /// Sets the internal <see cref="IServiceCollection"/> used to resolve our static instance of
@@ -25,6 +27,12 @@ namespace Razor.Templating.Core
             _instance = new(CreateInstance, true);
         }
 
+
+        public static void Initialize(Action<RazorViewEngineOptions> setupAction)
+        {
+            _setupAction = setupAction;
+        }
+
         /// <summary>
         /// Creates an instance of <see cref="RazorTemplateEngine"/> using an internal <see cref="ServiceCollection"/>.
         /// </summary>
@@ -37,7 +45,7 @@ namespace Razor.Templating.Core
                 // caller may not be using DI directly like in Azure Functions or WPF, 
                 // create our own service collection and register everything required.
                 _services = new ServiceCollection();
-                _services.AddRazorTemplating();
+                _services.AddRazorTemplating(_setupAction);
             }
 
             return _services.BuildServiceProvider().GetRequiredService<IRazorTemplateEngine>();

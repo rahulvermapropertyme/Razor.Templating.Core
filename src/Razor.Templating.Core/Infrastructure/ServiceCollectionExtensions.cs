@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.ObjectPool;
@@ -22,7 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <exception cref="ArgumentNullException"><paramref name="services"/> is null</exception>
         /// <exception cref="InvalidOperationException">
         /// This has been called again after the <see cref="RazorTemplateEngine"/> has already been initialized.</exception>
-        public static void AddRazorTemplating(this IServiceCollection services)
+        public static void AddRazorTemplating(this IServiceCollection services, Action<RazorViewEngineOptions>? setupAction = null)
         {
             ArgumentNullException.ThrowIfNull(services);
 
@@ -63,7 +64,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<ConsolidatedAssemblyApplicationPartFactory>();
             services.AddLogging();
             services.AddHttpContextAccessor();
-            var builder = services.AddMvcCore().AddRazorViewEngine();
+            var builder = services.AddMvcCore();
+            builder = setupAction != null ? builder.AddRazorViewEngine(setupAction) : builder.AddRazorViewEngine();
             //ref: https://stackoverflow.com/questions/52041011/aspnet-core-2-1-correct-way-to-load-precompiled-views
             //load view assembly application parts to find the view from shared libraries
             builder.ConfigureApplicationPartManager(manager =>
